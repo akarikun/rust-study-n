@@ -1,0 +1,7 @@
+/target
+Cargo.lock
+.vscode
+.env
+data.db
+node_modules
+
