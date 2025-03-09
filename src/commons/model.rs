@@ -20,7 +20,7 @@ pub struct SocketIO_Resp {
 }
 
 #[derive(Clone, Deserialize, Serialize)]
-pub struct Socket_IO_Study_N_Entity_Resp {
+pub struct SocketIO_Study_Resp {
     pub level: i32,
     pub index: i32,
     pub content: String,

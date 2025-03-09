@@ -1,5 +1,5 @@
 use crate::commons::model::{
-    SocketIO_Req, SocketIO_Resp, Socket_IO_Study_N_Entity_Resp, StudyN_Req,
+    SocketIO_Resp, SocketIO_Study_Resp,
 };
 use crate::dal::study;
 use crate::entities;
@@ -48,43 +48,43 @@ async fn hello() -> &'static str {
 }
 
 async fn io_select(s: &SocketRef, data: &Value) {
-    println!("select {:?}", data);
+    // println!("select {:?}", data);
 
-    let data = serde_json::from_value::<SocketIO_Req>(data.clone());
-    if !data.is_ok() {
-        _ = s.emit(
-            "select_resp",
-            SocketIO_Resp{
-                status: 0,
-                msg: format!("参数异常001"),
-                data: None,
-            },
-        );
-        return;
-    }
-    let data = data.unwrap();
-    if data.msg == "select"{
-        serde_json::from_value::<SocketIO_Req>(data.clone());
-    }
+    // let data = serde_json::from_value::<SocketIO_Req>(data.clone());
+    // if !data.is_ok() {
+    //     _ = s.emit(
+    //         "select_resp",
+    //         SocketIO_Resp{
+    //             status: 0,
+    //             msg: format!("参数异常001"),
+    //             data: None,
+    //         },
+    //     );
+    //     return;
+    // }
+    // let data = data.unwrap();
+    // if data.msg == "select"{
+    //     serde_json::from_value::<SocketIO_Req>(data.clone());
+    // }
 
-    // let m = match serde_json::from_value::<Socket_IO_Study_N_Entity_Req>(data.clone()) {
-    //     Ok(m) => m,
-    //     Err(_) => Socket_IO_Study_N_Entity_Req { index: 0, level: 0 },
-    // };
-    let result_list = study::get_list(m.index, m.level)
-        .await
-        .unwrap_or_else(|_x| vec![]);
+    // // let m = match serde_json::from_value::<Socket_IO_Study_N_Entity_Req>(data.clone()) {
+    // //     Ok(m) => m,
+    // //     Err(_) => Socket_IO_Study_N_Entity_Req { index: 0, level: 0 },
+    // // };
+    // let result_list = study::get_list(m.index, m.level)
+    //     .await
+    //     .unwrap_or_else(|_x| vec![]);
 
-    let mut list = Vec::new();
-    for i in result_list {
-        let m = serde_json::from_value::<Socket_IO_Study_N_Entity_Resp>(i).unwrap();
-        list.push(m);
-    }
-    _ = s.emit("select_resp", list);
+    // let mut list = Vec::new();
+    // for i in result_list {
+    //     let m = serde_json::from_value::<SocketIO_Study_Resp>(i).unwrap();
+    //     list.push(m);
+    // }
+    // _ = s.emit("select_resp", list);
 }
 async fn io_post(s: &SocketRef, data: &Value) {
     println!("post_study {:?}", data);
-    let m = serde_json::from_value::<Socket_IO_Study_N_Entity_Resp>(data.clone());
+    let m = serde_json::from_value::<SocketIO_Study_Resp>(data.clone());
     if m.is_ok() {
         let m = m.unwrap();
         _ = study::insert(entities::study::Model {
@@ -104,7 +104,7 @@ async fn io_post(s: &SocketRef, data: &Value) {
         .await;
         _ = s.emit(
             "post_resp",
-            MQTT_Resp::<String> {
+            SocketIO_Resp {
                 status: 1,
                 msg: format!("提交成功"),
                 data: None,
@@ -113,7 +113,7 @@ async fn io_post(s: &SocketRef, data: &Value) {
     } else {
         _ = s.emit(
             "post_study_resp",
-            MQTT_Resp::<String> {
+            SocketIO_Resp {
                 status: 0,
                 msg: format!("参数异常001"),
                 data: None,
@@ -123,7 +123,7 @@ async fn io_post(s: &SocketRef, data: &Value) {
 }
 async fn io_study(s: &SocketRef, data: &Value) {
     println!("post_study {:?}", data);
-    let m = serde_json::from_value::<Socket_IO_Study_N_Entity_Resp>(data.clone());
+    let m = serde_json::from_value::<SocketIO_Study_Resp>(data.clone());
     if m.is_ok() {
         let m = m.unwrap();
         _ = study::insert(entities::study::Model {
@@ -143,7 +143,7 @@ async fn io_study(s: &SocketRef, data: &Value) {
         .await;
         _ = s.emit(
             "post_resp",
-            MQTT_Resp::<String> {
+            SocketIO_Resp {
                 status: 1,
                 msg: format!("提交成功"),
                 data: None,
@@ -152,7 +152,7 @@ async fn io_study(s: &SocketRef, data: &Value) {
     } else {
         _ = s.emit(
             "post_study_resp",
-            MQTT_Resp::<String> {
+            SocketIO_Resp {
                 status: 0,
                 msg: format!("参数异常001"),
                 data: None,
