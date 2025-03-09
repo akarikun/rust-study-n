@@ -29,6 +29,18 @@ export default async () => {
     },
     server: {
       host: true,
+      proxy:{
+        '/ws':{
+          target:'http://localhost:3000',
+          changeOrigin:true,
+          ws:true,
+        },
+        '/socket.io/':{
+          target:'http://localhost:3000',
+          changeOrigin:true,
+          ws:true,
+        }
+      }
     },
   };
 }

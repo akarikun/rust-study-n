@@ -25,10 +25,7 @@
         </f7-block>
       </f7-tab>
       <f7-tab id="tab-home-2" class="page-content">
-        <f7-block>
-          <p>Tab 2 content</p>
-
-        </f7-block>
+        <N3Post></N3Post>
       </f7-tab>
       <f7-tab id="tab-home-3" class="page-content">
         <f7-block>
@@ -41,6 +38,7 @@
 </template>
 <script setup>
 import Login from '../pages/login.vue'
+import N3Post from '../pages/N3-post.vue'
 const props = defineProps({
   f7route: Object,
   f7router: Object,

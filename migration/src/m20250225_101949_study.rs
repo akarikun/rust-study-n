@@ -18,7 +18,6 @@ impl MigrationTrait for Migration {
                     .col(integer(Study::Index))
                     .col(string(Study::Content))
                     .col(string(Study::A)).col(string(Study::B)).col(string(Study::C)).col(string(Study::D))
-                    .col(string(Study::ALabel)).col(string(Study::BLabel)).col(string(Study::CLabel)).col(string(Study::DLabel))
                     .col(string(Study::Remark))
                     .col(integer(Study::Result))
                     .col(integer(Study::Type))
@@ -45,7 +44,6 @@ enum Study {
     Index,
     Content,
     A,B,C,D,
-    ALabel,BLabel,CLabel,DLabel,
     Remark,
     Result,
     Type,

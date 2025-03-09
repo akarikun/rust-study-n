@@ -4,7 +4,8 @@
         <f7-tabs class="tab" animated swipeable @tab:show="tab_show">
             <f7-tab :id="`tab-n3-1000-${item}`" v-for="item in 10" :key="item" class="page-content">
                 <f7-card outline-md>
-                    <f7-card-header valign="bottom">{{ item }}. <span><a href="#">查看上一题</a></span></f7-card-header>
+                    <f7-card-header valign="bottom">{{ item }}. <span><f7-button
+                                :tab-link="`#tab-n3-1000-${item - 1}`">查看上一题</f7-button></span></f7-card-header>
                     <f7-card-content>
                         <f7-block strong>
                             <p>
@@ -14,23 +15,16 @@
                         <f7-block-title>请选择</f7-block-title>
                         <br />
                         <f7-list strong-ios outline-ios dividers-ios>
-                            <f7-list-item radio v-for="(item2, index2) in sel_arr" :name="`checkbox-${item}`">
-                                <lable>{{ format_index(index2) }}: <span>{{ item2 }}</span></lable>
+                            <f7-list-item radio v-for="(item2, index2) in sel_arr" v-model="sel_val"
+                                :name="`checkbox-${item}`">
+                                <label>{{ format_index(index2) }}: <span>{{ item2 }}</span></label>
+                                <label>错误</label>
                             </f7-list-item>
                         </f7-list>
-                        <br /><br />
-                        <f7-block>
-                            <f7-button large fill color="blue" :tab-link="`#tab-n3-1000-${item + 1}`">下一题</f7-button>
-                            <!-- <div class="grid grid-cols-2 grid-gap">
-                                <f7-button large fill color="blue" :tab-link="`#tab-n3-1000-${item - 1}`">上一题</f7-button>
-                                <f7-button large fill color="blue" :tab-link="`#tab-n3-1000-${item + 1}`">下一题</f7-button>
-                            </div> -->
-                        </f7-block>
-                        <br />
                     </f7-card-content>
                     <!-- <f7-card-footer> -->
-                        <!-- <span><a href="#">查看上一题</a></span> -->
-                        <!-- <span>本题正确答案: <b style="color:tomato">A</b></span> -->
+                    <!-- <span><a href="#">查看上一题</a></span> -->
+                    <!-- <span>本题正确答案: <b style="color:tomato">A</b></span> -->
                     <!-- </f7-card-footer> -->
                 </f7-card>
                 <f7-block>
@@ -42,7 +36,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { f7, f7ready } from 'framework7-vue';
 
 // const props = defineProps({
@@ -51,6 +45,13 @@ import { f7, f7ready } from 'framework7-vue';
 // })
 const selected = ref('home');
 const sel_arr = ref([]);
+const sel_val = ref(null)
+
+watch(sel_val, (newVal, oldVal) => {
+    console.log(newVal)
+    console.log(oldVal)
+}, { deep: true })
+
 const format_index = (item) => {
     switch (item) {
         case 0: return 'A';
@@ -66,6 +67,21 @@ const tab_show = (tab) => {
 }
 onMounted(() => {
     sel_arr.value = ['あこがれる', 'みだれる', 'めぐまれる', 'たおれる'];
+
+    dispatchEvent(new CustomEvent('study_msg', {
+        detail: {
+            msg: 'select',
+            data: { level: 3, index: 1 },
+        },
+    }));
+
+    // const ioc = io("/ws");
+    // ioc.on('connect', () => {
+    //     ioc.emit('select', { level: 3, index: 1 })
+    // });
+    // ioc.on('select_resp', data => {
+    //     console.log(data);
+    // })
 })
 </script>
 <style lang="less" scoped>

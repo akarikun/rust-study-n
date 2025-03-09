@@ -6,6 +6,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { f7, f7ready } from 'framework7-vue';
+import { io } from "socket.io-client";
 
 import routes from '../js/routes.js';
 import store from '../js/store';
@@ -27,6 +28,18 @@ onMounted(() => {
   f7ready(() => {
     // Call F7 APIs here
     console.log(f7.colors);
+
+    const ioc = io("/ws");
+    ioc.on('connect', () => {
+      window.addEventListener('study_msg', (arg) => {
+        let { msg, data } = arg.detail
+        console.log(msg, data);
+        ioc.emit(msg, data)// ioc.emit('select', { level: 3, index: 1 })
+      }, false);
+    });
+    ioc.on('select_resp', data => {
+      console.log(data);
+    })
   });
 });
 
