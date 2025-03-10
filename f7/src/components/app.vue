@@ -10,6 +10,7 @@ import { io } from "socket.io-client";
 
 import routes from '../js/routes.js';
 import store from '../js/store';
+import * as $ from '../js/utils.js'
 
 const f7params = ref({
   name: 'study-n', // App name
@@ -24,6 +25,7 @@ const f7params = ref({
   }
 });
 
+
 onMounted(() => {
   f7ready(() => {
     // Call F7 APIs here
@@ -31,14 +33,14 @@ onMounted(() => {
 
     const ioc = io("/ws");
     ioc.on('connect', () => {
-      window.addEventListener('study_msg', (arg) => {
-        let { msg, data } = arg.detail
-        console.log(msg, data);
-        ioc.emit(msg, data)// ioc.emit('select', { level: 3, index: 1 })
+      window.addEventListener($.study_server_msg, (data) => {
+        // console.log(data.detail)
+        ioc.emit($.study_server_msg, data.detail)
       }, false);
     });
-    ioc.on('select_resp', data => {
-      console.log(data);
+    ioc.on($.study_msg_resp, data => {
+      console.log($.study_msg_resp, data);
+      $.dispatchPageMessage(data)
     })
   });
 });

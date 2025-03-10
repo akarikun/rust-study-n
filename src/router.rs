@@ -1,6 +1,4 @@
-use crate::commons::model::{
-    SocketIO_Resp, SocketIO_Study_Resp,
-};
+use crate::commons::model::{SIO_GetIndexReq, SIO_PostStudyReq, SocketIO_Req, SocketIO_Resp};
 use crate::dal::study;
 use crate::entities;
 use salvo::prelude::*;
@@ -47,136 +45,85 @@ async fn hello() -> &'static str {
     "Hello World"
 }
 
-async fn io_select(s: &SocketRef, data: &Value) {
-    // println!("select {:?}", data);
-
-    // let data = serde_json::from_value::<SocketIO_Req>(data.clone());
-    // if !data.is_ok() {
-    //     _ = s.emit(
-    //         "select_resp",
-    //         SocketIO_Resp{
-    //             status: 0,
-    //             msg: format!("参数异常001"),
-    //             data: None,
-    //         },
-    //     );
-    //     return;
-    // }
-    // let data = data.unwrap();
-    // if data.msg == "select"{
-    //     serde_json::from_value::<SocketIO_Req>(data.clone());
-    // }
-
-    // // let m = match serde_json::from_value::<Socket_IO_Study_N_Entity_Req>(data.clone()) {
-    // //     Ok(m) => m,
-    // //     Err(_) => Socket_IO_Study_N_Entity_Req { index: 0, level: 0 },
-    // // };
-    // let result_list = study::get_list(m.index, m.level)
-    //     .await
-    //     .unwrap_or_else(|_x| vec![]);
-
-    // let mut list = Vec::new();
-    // for i in result_list {
-    //     let m = serde_json::from_value::<SocketIO_Study_Resp>(i).unwrap();
-    //     list.push(m);
-    // }
-    // _ = s.emit("select_resp", list);
-}
-async fn io_post(s: &SocketRef, data: &Value) {
-    println!("post_study {:?}", data);
-    let m = serde_json::from_value::<SocketIO_Study_Resp>(data.clone());
-    if m.is_ok() {
-        let m = m.unwrap();
-        _ = study::insert(entities::study::Model {
-            id: 0,
-            level: m.level,
-            index: m.index,
-            content: m.content,
-            a: m.a,
-            b: m.b,
-            c: m.c,
-            d: m.d,
-            remark: m.remark,
-            result: m.result,
-            r#type: m.r#type,
-            create_date: Local::now().naive_local(),
-        })
-        .await;
-        _ = s.emit(
-            "post_resp",
-            SocketIO_Resp {
-                status: 1,
-                msg: format!("提交成功"),
-                data: None,
-            },
-        );
-    } else {
-        _ = s.emit(
-            "post_study_resp",
-            SocketIO_Resp {
-                status: 0,
-                msg: format!("参数异常001"),
-                data: None,
-            },
-        );
-    }
-}
 async fn io_study(s: &SocketRef, data: &Value) {
-    println!("post_study {:?}", data);
-    let m = serde_json::from_value::<SocketIO_Study_Resp>(data.clone());
-    if m.is_ok() {
-        let m = m.unwrap();
-        _ = study::insert(entities::study::Model {
-            id: 0,
-            level: m.level,
-            index: m.index,
-            content: m.content,
-            a: m.a,
-            b: m.b,
-            c: m.c,
-            d: m.d,
-            remark: m.remark,
-            result: m.result,
-            r#type: m.r#type,
-            create_date: Local::now().naive_local(),
-        })
-        .await;
-        _ = s.emit(
-            "post_resp",
-            SocketIO_Resp {
-                status: 1,
-                msg: format!("提交成功"),
-                data: None,
-            },
-        );
-    } else {
-        _ = s.emit(
-            "post_study_resp",
-            SocketIO_Resp {
-                status: 0,
-                msg: format!("参数异常001"),
-                data: None,
-            },
-        );
+    println!("io_study {:?}", data);
+
+    let study_msg_resp = "study_msg_resp";
+    let m = match serde_json::from_value::<SocketIO_Req>(data.clone()) {
+        Ok(m) => m,
+        Err(_) => return,
+    };
+    dbg!(&m);
+    if m.msg == "get_last_index" {
+        if let Some(data) = m.data {
+            let data = match serde_json::from_value::<SIO_GetIndexReq>(data) {
+                Ok(m) => m,
+                Err(_) => return,
+            };
+
+            let list = match study::get_list(data.index, data.level).await {
+                Ok(m) => m,
+                Err(_) => return,
+            };
+            let mut index = 0;
+            if list.len() > 0 {
+                index = list.last().unwrap().as_i64().unwrap();
+            }
+            _ = s.emit(
+                study_msg_resp,
+                SocketIO_Resp::<i64> {
+                    status: 1,
+                    msg: format!(""),
+                    data: Some(index),
+                },
+            );
+            println!("发送成功");
+        }
+    } else if m.msg == "post_study" {
     }
+
+    // println!("{:?}", m);
+    // if m.is_ok() {
+    //     // let m = m.unwrap();
+    //     // _ = study::insert(entities::study::Model {
+    //     //     id: 0,
+    //     //     level: m.level,
+    //     //     index: m.index,
+    //     //     content: m.content,
+    //     //     a: m.a,
+    //     //     b: m.b,
+    //     //     c: m.c,
+    //     //     d: m.d,
+    //     //     remark: m.remark,
+    //     //     result: m.result,
+    //     //     r#type: m.r#type,
+    //     //     create_date: Local::now().naive_local(),
+    //     // })
+    //     // .await;
+    //     // _ = s.emit(
+    //     //     "post_resp",
+    //     //     SocketIO_Resp {
+    //     //         status: 1,
+    //     //         msg: format!("提交成功"),
+    //     //         data: None,
+    //     //     },
+    //     // );
+    // } else {
+    //     // _ = s.emit(
+    //     //     "post_study_resp",
+    //     //     SocketIO_Resp {
+    //     //         status: 0,
+    //     //         msg: format!("参数异常001"),
+    //     //         data: None,
+    //     //     },
+    //     // );
+    // }
 }
 fn on_connect(socket: SocketRef, Data(data): Data<Value>) {
-    println!(
-        "Socket.IO connected: {:?} {:?} {:?}",
-        socket.ns(),
-        socket.id,
-        data
-    );
     socket.on(
-        "select",
+        "study_msg",
         move |s: SocketRef, data: Data<Value>| async move {
-            io_select(&s, &data.0).await;
-        },
-    );
-    socket.on(
-        "post_study",
-        move |s: SocketRef, data: Data<Value>| async move {
-            io_post(&s, &data.0).await;
+            io_study(&s, &data.0).await;
         },
     );
 }

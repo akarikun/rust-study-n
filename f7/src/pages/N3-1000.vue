@@ -43,14 +43,8 @@ import { f7, f7ready } from 'framework7-vue';
 //     f7route: Object,
 //     f7router: Object,
 // })
-const selected = ref('home');
 const sel_arr = ref([]);
 const sel_val = ref(null)
-
-watch(sel_val, (newVal, oldVal) => {
-    console.log(newVal)
-    console.log(oldVal)
-}, { deep: true })
 
 const format_index = (item) => {
     switch (item) {
@@ -70,18 +64,10 @@ onMounted(() => {
 
     dispatchEvent(new CustomEvent('study_msg', {
         detail: {
-            msg: 'select',
+            msg: 'get_last_index',
             data: { level: 3, index: 1 },
         },
     }));
-
-    // const ioc = io("/ws");
-    // ioc.on('connect', () => {
-    //     ioc.emit('select', { level: 3, index: 1 })
-    // });
-    // ioc.on('select_resp', data => {
-    //     console.log(data);
-    // })
 })
 </script>
 <style lang="less" scoped>

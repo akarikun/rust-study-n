@@ -52,7 +52,7 @@
 
 <script setup>
 import { ref, toRefs, toRaw, onMounted, watch } from 'vue';
-import { dispatchMessage } from '../js/utils';
+import { dispatchServerMessage } from '../js/utils';
 const form_init = () => {
     return {
         level: "3",
@@ -65,14 +65,20 @@ const form_init = () => {
     }
 }
 const form = ref(form_init());
-watch(form, (newVal, oldVal) => {
-    const level = newVal.level;
-    dispatchMessage({
-        msg: 'study_get_last_index',
+const get_last_index = (level) => {
+    dispatchServerMessage({
+        msg: 'get_last_index',
         data: {
             level
         }
     })
+}
+onMounted(() => {
+    // debugger
+    get_last_index();
+});
+watch(form, (newVal, oldVal) => {
+    get_last_index(newVal.level)
 }, { deep: true })
 
 const customButtons = ref({
@@ -98,9 +104,6 @@ const customButtons = ref({
     },
 });
 
-// onMounted(() => {
-
-// });
 const post_data = () => {
     console.log("提交数据：", JSON.stringify(form.value, null, 2));
     // form.value = form_init()
