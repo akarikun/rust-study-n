@@ -13,7 +13,7 @@ impl MigrationTrait for Migration {
                 Table::create()
                     .table(Study::Table)
                     .if_not_exists()
-                    .col(pk_auto(Study::Id))
+                    .col(pk_auto(Study::Id)) //生成有bug，没有auto_increment   #[sea_orm(primary_key, auto_increment=true)]
                     .col(integer(Study::Level))
                     .col(integer(Study::Index))
                     .col(string(Study::Content))
@@ -49,3 +49,4 @@ enum Study {
     Type,
     CreateDate,
 }
+

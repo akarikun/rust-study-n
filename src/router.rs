@@ -45,6 +45,13 @@ async fn hello() -> &'static str {
     "Hello World"
 }
 
+async fn get_last_index(level: i32) -> i64 {
+    match study::get_last_index(level).await {
+        Ok(m) => m,
+        Err(_) => 0,
+    }
+}
+
 async fn io_study(s: &SocketRef, data: &Value) {
     println!("io_study {:?}", data);
 
@@ -53,73 +60,78 @@ async fn io_study(s: &SocketRef, data: &Value) {
         Ok(m) => m,
         Err(_) => return,
     };
-    dbg!(&m);
+    // dbg!(&m);
     if m.msg == "get_last_index" {
         if let Some(data) = m.data {
             let data = match serde_json::from_value::<SIO_GetIndexReq>(data) {
                 Ok(m) => m,
                 Err(_) => return,
             };
-
-            let list = match study::get_list(data.index, data.level).await {
-                Ok(m) => m,
-                Err(_) => return,
-            };
-            let mut index = 0;
-            if list.len() > 0 {
-                index = list.last().unwrap().as_i64().unwrap();
-            }
+            let id = get_last_index(data.level).await;
             _ = s.emit(
                 study_msg_resp,
                 SocketIO_Resp::<i64> {
                     status: 1,
-                    msg: format!(""),
-                    data: Some(index),
+                    msg: format!("get_last_index_resp"),
+                    data: Some(id),
                 },
             );
             println!("发送成功");
         }
     } else if m.msg == "post_study" {
+        if let Some(data) = m.data {
+            let data = match serde_json::from_value::<SIO_PostStudyReq>(data) {
+                Ok(m) => m,
+                Err(_) => return,
+            };
+            let id = get_last_index(data.level).await;
+            match study::insert(entities::study::Model {
+                id: (id + 1) as i32, //SeaORM生成的实体类漏了设置自动增长，这里先手动处理
+                level: data.level,
+                index: data.index,
+                content: data.content,
+                a: data.a,
+                b: data.b,
+                c: data.c,
+                d: data.d,
+                remark: data.remark,
+                result: data.result,
+                r#type: data.r#type,
+                create_date: Local::now().naive_local(),
+            })
+            .await
+            {
+                Ok(res) => {
+                    _ = s.emit(
+                        study_msg_resp,
+                        SocketIO_Resp::<i32> {
+                            status: 1,
+                            msg: format!("post_study_resp"),
+                            data: Some(res.id),
+                        },
+                    );
+                }
+                Err(e) => {
+                    _ = s.emit(
+                        study_msg_resp,
+                        SocketIO_Resp::<String> {
+                            status: 0,
+                            msg: format!("post_study_resp"),
+                            data: Some(format!("{:?}", e.sql_err())),
+                        },
+                    );
+                }
+            };
+        }
     }
-
-    // println!("{:?}", m);
-    // if m.is_ok() {
-    //     // let m = m.unwrap();
-    //     // _ = study::insert(entities::study::Model {
-    //     //     id: 0,
-    //     //     level: m.level,
-    //     //     index: m.index,
-    //     //     content: m.content,
-    //     //     a: m.a,
-    //     //     b: m.b,
-    //     //     c: m.c,
-    //     //     d: m.d,
-    //     //     remark: m.remark,
-    //     //     result: m.result,
-    //     //     r#type: m.r#type,
-    //     //     create_date: Local::now().naive_local(),
-    //     // })
-    //     // .await;
-    //     // _ = s.emit(
-    //     //     "post_resp",
-    //     //     SocketIO_Resp {
-    //     //         status: 1,
-    //     //         msg: format!("提交成功"),
-    //     //         data: None,
-    //     //     },
-    //     // );
-    // } else {
-    //     // _ = s.emit(
-    //     //     "post_study_resp",
-    //     //     SocketIO_Resp {
-    //     //         status: 0,
-    //     //         msg: format!("参数异常001"),
-    //     //         data: None,
-    //     //     },
-    //     // );
-    // }
 }
 fn on_connect(socket: SocketRef, Data(data): Data<Value>) {
+    println!(
+        "Socket.IO connected: {:?} {:?} {:?}",
+        socket.ns(),
+        socket.id,
+        data
+    );
     socket.on(
         "study_msg",
         move |s: SocketRef, data: Data<Value>| async move {

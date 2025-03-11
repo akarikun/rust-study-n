@@ -34,7 +34,13 @@ sea-orm-cli migrate generate <entity>
 #### 4.生成实体类
 ```
 sea-orm-cli migrate up
-#sea-orm-cli migrate fresh
-#sea-orm-cli migrate down
+# sea-orm-cli migrate down
+# sea-orm-cli migrate fresh
+# sea-orm-cli migrate status
 sea-orm-cli generate entity -o src/entities
+```
+
+#### 发布可执行文件
+```
+cd f7 && npm run build && cd .. && cargo build --release
 ```

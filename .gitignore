@@ -4,4 +4,4 @@ Cargo.lock
 .env
 data.db
 node_modules
-
+/web/

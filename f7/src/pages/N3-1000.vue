@@ -15,10 +15,14 @@
                         <f7-block-title>请选择</f7-block-title>
                         <br />
                         <f7-list strong-ios outline-ios dividers-ios>
-                            <f7-list-item radio v-for="(item2, index2) in sel_arr" v-model="sel_val"
+                            <!-- <f7-list-item radio v-for="(item2, index2) in sel_arr" v-model="sel_val"
                                 :name="`checkbox-${item}`">
                                 <label>{{ format_index(index2) }}: <span>{{ item2 }}</span></label>
                                 <label>错误</label>
+                            </f7-list-item> -->
+                            <f7-list-item v-for="(item, index) in sel_arr" :key="index">
+                                <!-- <f7-text-editor placeholder="备注" :value="form.remark" @input="form.remark = $event.target.innerHTML" /> -->
+                                 <f7-button large fill>{{ format_index(index) }}: {{ item }}</f7-button>
                             </f7-list-item>
                         </f7-list>
                     </f7-card-content>
@@ -59,15 +63,17 @@ const format_index = (item) => {
 const tab_show = (tab) => {
     console.log(tab);
 }
+
 onMounted(() => {
     sel_arr.value = ['あこがれる', 'みだれる', 'めぐまれる', 'たおれる'];
 
-    dispatchEvent(new CustomEvent('study_msg', {
-        detail: {
-            msg: 'get_last_index',
-            data: { level: 3, index: 1 },
-        },
-    }));
+    // dispatchEvent(new CustomEvent('study_msg', {
+    //     detail: {
+    //         msg: 'get_last_index',
+    //         data: { level: 3, index: 1 },
+    //     },
+    // }));
+    // dispatchServerMessage('get_last_index',{})
 })
 </script>
 <style lang="less" scoped>
@@ -79,6 +85,11 @@ u {
     color: red;
 }
 
+.list{
+    a{
+        width:100%;
+    }
+}
 .card {
 
     .card-header,

@@ -52,10 +52,12 @@
 
 <script setup>
 import { ref, toRefs, toRaw, onMounted, watch } from 'vue';
-import { dispatchServerMessage } from '../js/utils';
+import { f7, f7ready } from 'framework7-vue';
+import * as $ from '../js/utils';
+
 const form_init = () => {
     return {
-        level: "3",
+        level: 3,
         index: 0,
         content: "",
         a: "", b: "", c: "", d: "",
@@ -65,20 +67,21 @@ const form_init = () => {
     }
 }
 const form = ref(form_init());
-const get_last_index = (level) => {
-    dispatchServerMessage({
-        msg: 'get_last_index',
-        data: {
-            level
-        }
-    })
-}
+
 onMounted(() => {
-    // debugger
-    get_last_index();
+    f7ready(() => {
+        setTimeout(() => {
+            $.MSG.get_last_index(form.value.level);
+        }, 1000)
+        $.MSG.register_page_msg(({ data, status }) => {
+            form.value.index = data + 1;
+        });
+    })
 });
 watch(form, (newVal, oldVal) => {
-    get_last_index(newVal.level)
+    if (newVal.value && newVal.value.level != oldVal.value.level) {
+        $.MSG.get_last_index(newVal.level)
+    }
 }, { deep: true })
 
 const customButtons = ref({
@@ -107,19 +110,15 @@ const customButtons = ref({
 const post_data = () => {
     console.log("提交数据：", JSON.stringify(form.value, null, 2));
     // form.value = form_init()
-    dispatchEvent(new CustomEvent('study_msg', {
-        detail: {
-            msg: 'post_study',
-            data: toRaw(form.value),
-        },
-    }));
-
+    $.MSG.post_study(toRaw(form.value));
 };
 </script>
 
 <style lang="less" scoped>
 .text-editor {
     width: 100%;
+    padding: 0;
+    margin: 0;
 }
 
 .item-inner {

@@ -18,7 +18,6 @@ pub struct SocketIO_Resp<T> {
 #[derive(Clone, Deserialize, Serialize, Debug)]
 pub struct SIO_GetIndexReq {
     pub level:i32,
-    pub index:i32,
 }
 
 #[derive(Clone, Deserialize, Serialize, Debug)]

@@ -1,14 +1,38 @@
-export const study_page_msg = "study_page_msg"
-export const study_server_msg = "study_server_msg"
+import { io } from "socket.io-client";
+const study_server_msg = "study_server_msg";
 
-const dispatchMessage = (msg, detail) => {
-    dispatchEvent(new CustomEvent(msg, {
-        detail
-    }));
+export const MSG = {
+    get_last_index: (level) => {
+        dispatchEvent(new CustomEvent(study_server_msg, {
+            detail: {
+                msg: 'get_last_index', data: { level: parseInt(level) }
+            }
+        }));
+    },
+    post_study: (data) => {
+        dispatchEvent(new CustomEvent(study_server_msg, {
+            detail: {
+                msg: 'post_study', data
+            }
+        }));
+    },
+    register_page_msg: (fn) => {
+        window.addEventListener('study_page_msg', data => { fn(data.detail) }, false);
+    }
 }
-export const dispatchServerMessage = (detail) => {
-    dispatchMessage(study_server_msg, detail);
-}
-export const dispatchPageMessage = (detail) => {
-    dispatchMessage(study_page_msg, detail);
+
+export const socket_io_register = () => {
+    const ioc = io("/ws");
+    ioc.on('connect', () => {
+        window.addEventListener(study_server_msg, (data) => {
+            console.log('send => ', data.detail)
+            ioc.emit('study_msg', data.detail)
+        }, false);
+    });
+    ioc.on('study_msg_resp', data => {
+        console.log('recv => ', 'study_msg_resp', data);
+        dispatchEvent(new CustomEvent('study_page_msg', {
+            detail: data
+        }));
+    })
 }
