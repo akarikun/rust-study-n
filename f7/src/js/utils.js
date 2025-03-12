@@ -22,7 +22,11 @@ export const MSG = {
 }
 
 export const socket_io_register = () => {
-    const ioc = io("/ws");
+    const ioc = io("/ws", {
+        auth: (cb) => {
+            cb({ token: 'test' })
+        }
+    });
     ioc.on('connect', () => {
         window.addEventListener(study_server_msg, (data) => {
             console.log('send => ', data.detail)

@@ -1,8 +1,8 @@
 <template>
     <f7-page>
+        <f7-navbar back-link="返回" title="录入"></f7-navbar>
         <f7-list strong-ios dividers-ios inset>
             <f7-block-title>添加</f7-block-title>
-
             <f7-list-input label="所属级别" :value="form.level" @change="form.level = $event.target.value" type="select">
                 <option value="4">N4-N5</option>
                 <option value="3">N3(目前只支持N3)</option>
@@ -108,9 +108,17 @@ const customButtons = ref({
 });
 
 const post_data = () => {
-    console.log("提交数据：", JSON.stringify(form.value, null, 2));
-    // form.value = form_init()
+    console.log("提交数据：", JSON.stringify(form.value, null, 2));    
     $.MSG.post_study(toRaw(form.value));
+    form.value = form_init()
+    f7.notification.create({
+        icon: '<i class="icon icon-f7"></i>',
+        title: '日语学习',
+        //titleRightText: 'now',
+        // subtitle: '操作成功',
+        text: '操作成功',
+        closeTimeout: 3000,
+    }).open();
 };
 </script>
 

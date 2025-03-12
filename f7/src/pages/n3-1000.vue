@@ -12,28 +12,15 @@
                                 日本では野球選手に<u>憧れる</u>子どもたちが多い。
                             </p>
                         </f7-block>
-                        <f7-block-title>请选择</f7-block-title>
-                        <br />
+                        <br /><br /><br /><br /><br />
                         <f7-list strong-ios outline-ios dividers-ios>
-                            <!-- <f7-list-item radio v-for="(item2, index2) in sel_arr" v-model="sel_val"
-                                :name="`checkbox-${item}`">
-                                <label>{{ format_index(index2) }}: <span>{{ item2 }}</span></label>
-                                <label>错误</label>
-                            </f7-list-item> -->
-                            <f7-list-item v-for="(item, index) in sel_arr" :key="index">
-                                <!-- <f7-text-editor placeholder="备注" :value="form.remark" @input="form.remark = $event.target.innerHTML" /> -->
-                                 <f7-button large fill>{{ format_index(index) }}: {{ item }}</f7-button>
+                            <f7-list-item v-for="(item2, index2) in sel_arr" :key="index2">
+                                <f7-button large fill @click="handle_select(item, index2 + 1)">{{ format_index(index2) }}:
+                                    {{ item2 }}</f7-button>
                             </f7-list-item>
                         </f7-list>
                     </f7-card-content>
-                    <!-- <f7-card-footer> -->
-                    <!-- <span><a href="#">查看上一题</a></span> -->
-                    <!-- <span>本题正确答案: <b style="color:tomato">A</b></span> -->
-                    <!-- </f7-card-footer> -->
                 </f7-card>
-                <f7-block>
-                    本题提示
-                </f7-block>
             </f7-tab>
         </f7-tabs>
     </f7-page>
@@ -48,7 +35,6 @@ import { f7, f7ready } from 'framework7-vue';
 //     f7router: Object,
 // })
 const sel_arr = ref([]);
-const sel_val = ref(null)
 
 const format_index = (item) => {
     switch (item) {
@@ -62,6 +48,10 @@ const format_index = (item) => {
 
 const tab_show = (tab) => {
     console.log(tab);
+}
+
+const handle_select = (level, result) => {
+    debugger;
 }
 
 onMounted(() => {
@@ -85,11 +75,12 @@ u {
     color: red;
 }
 
-.list{
-    a{
-        width:100%;
+.list {
+    a {
+        width: 100%;
     }
 }
+
 .card {
 
     .card-header,

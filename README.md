@@ -37,7 +37,7 @@ sea-orm-cli migrate up
 # sea-orm-cli migrate down
 # sea-orm-cli migrate fresh
 # sea-orm-cli migrate status
-sea-orm-cli generate entity -o src/entities  # 生成实体
+sea-orm-cli generate entity -o src/entities # 生成实体
 ```
 
 #### 发布可执行文件

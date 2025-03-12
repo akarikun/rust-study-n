@@ -61,6 +61,7 @@ async fn io_study(s: &SocketRef, data: &Value) {
         Err(_) => return,
     };
     // dbg!(&m);
+    let msg_resp = format!("{}_resp", m.msg);
     if m.msg == "get_last_index" {
         if let Some(data) = m.data {
             let data = match serde_json::from_value::<SIO_GetIndexReq>(data) {
@@ -72,7 +73,7 @@ async fn io_study(s: &SocketRef, data: &Value) {
                 study_msg_resp,
                 SocketIO_Resp::<i64> {
                     status: 1,
-                    msg: format!("get_last_index_resp"),
+                    msg: msg_resp,
                     data: Some(id),
                 },
             );
@@ -106,7 +107,7 @@ async fn io_study(s: &SocketRef, data: &Value) {
                         study_msg_resp,
                         SocketIO_Resp::<i32> {
                             status: 1,
-                            msg: format!("post_study_resp"),
+                            msg: msg_resp,
                             data: Some(res.id),
                         },
                     );
@@ -116,7 +117,7 @@ async fn io_study(s: &SocketRef, data: &Value) {
                         study_msg_resp,
                         SocketIO_Resp::<String> {
                             status: 0,
-                            msg: format!("post_study_resp"),
+                            msg: msg_resp,
                             data: Some(format!("{:?}", e.sql_err())),
                         },
                     );
@@ -125,6 +126,7 @@ async fn io_study(s: &SocketRef, data: &Value) {
         }
     }
 }
+
 fn on_connect(socket: SocketRef, Data(data): Data<Value>) {
     println!(
         "Socket.IO connected: {:?} {:?} {:?}",
@@ -132,12 +134,17 @@ fn on_connect(socket: SocketRef, Data(data): Data<Value>) {
         socket.id,
         data
     );
-    socket.on(
-        "study_msg",
-        move |s: SocketRef, data: Data<Value>| async move {
-            io_study(&s, &data.0).await;
-        },
-    );
+    if data["token"] == "test" {
+        socket.on(
+            "study_msg",
+            move |s: SocketRef, data: Data<Value>| async move {
+                io_study(&s, &data.0).await;
+            },
+        );
+    } else {
+        dbg!(&data);
+        _ = socket.disconnect();
+    }
 }
 
 pub fn config_router() -> Router {
