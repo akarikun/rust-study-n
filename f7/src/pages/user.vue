@@ -2,7 +2,7 @@
     <f7-page>
         <f7-list dividers-ios strong-ios outline-ios>
             <f7-list-item class="user-item" link="#">
-                <img src="../icons/avatar.webp" width="80" height="80" alt="avatar" />
+                <img src="/icons/avatar.webp" width="80" height="80" alt="avatar" />
                 <ul>
                     <li>大帅哥</li>
                     <li>等级: N3</li>

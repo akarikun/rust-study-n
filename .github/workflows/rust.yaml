@@ -1,0 +1,40 @@
+name: Build and Release
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '22'
+
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: x86_64-unknown-linux-gnu
+
+      - name: Install npm dependencies
+        run: cd f7 && npm install
+
+      - name: Build Vue.js frontend
+        run: mkdir web && cd f7 && npm run build
+
+      - name: Build Rust backend
+        run: cargo build --release
+
+      - name: Upload Release Archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: study-n
+          path: target/release/study-n

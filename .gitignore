@@ -5,5 +5,3 @@ Cargo.lock
 data.db
 node_modules
 /web/
-/src/entities
-package-lock.json
