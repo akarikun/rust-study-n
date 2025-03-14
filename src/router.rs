@@ -1,4 +1,6 @@
-use crate::commons::model::{SIO_GetIndexReq, SIO_PostStudyReq, SocketIO_Req, SocketIO_Resp};
+use crate::commons::model::{
+    SIO_GetIndexReq, SIO_GetStudyReq, SIO_PostStudyReq, SocketIO_Req, SocketIO_Resp,
+};
 use crate::dal::study;
 use crate::entities;
 use salvo::prelude::*;
@@ -78,6 +80,39 @@ async fn io_study(s: &SocketRef, data: &Value) {
                 },
             );
             println!("发送成功");
+        }
+    } else if m.msg == "get_study_list" {
+        if let Some(data) = m.data {
+            let data = match serde_json::from_value::<SIO_GetStudyReq>(data) {
+                Ok(m) => m,
+                Err(_) => return,
+            };
+            let res = match study::get_model(data.id).await {
+                Some(m) => m,
+                None => return,
+            };
+            match serde_json::from_value::<SIO_PostStudyReq>(res) {
+                Ok(m) => {
+                    _ = s.emit(
+                        study_msg_resp,
+                        SocketIO_Resp::<SIO_PostStudyReq> {
+                            status: 1,
+                            msg: msg_resp,
+                            data: Some(m),
+                        },
+                    );
+                }
+                Err(_) => {
+                    _ = s.emit(
+                        study_msg_resp,
+                        SocketIO_Resp::<String> {
+                            status: 1,
+                            msg: msg_resp,
+                            data: Some(format!("")),
+                        },
+                    );
+                }
+            };
         }
     } else if m.msg == "post_study" {
         if let Some(data) = m.data {
@@ -162,7 +197,7 @@ pub fn config_router() -> Router {
             .force_passed(true);
 
     Router::new()
-        .push(Router::with_path("/login.do").post(login))
-        .push(Router::with_hoop(auth_handler).path("check").get(check))
+        // .push(Router::with_path("/login.do").post(login))
+        // .push(Router::with_hoop(auth_handler).path("check").get(check))
         .push(Router::with_path("/socket.io").hoop(layer).goal(hello))
 }

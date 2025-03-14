@@ -21,10 +21,10 @@ export const MSG = {
     }
 }
 
-export const socket_io_register = () => {
+export const socket_io_register = (token) => {
     const ioc = io("/ws", {
         auth: (cb) => {
-            cb({ token: 'test' })
+            cb({ token: token || 'test' })
         }
     });
     ioc.on('connect', () => {

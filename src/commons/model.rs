@@ -21,6 +21,13 @@ pub struct SIO_GetIndexReq {
 }
 
 #[derive(Clone, Deserialize, Serialize, Debug)]
+pub struct SIO_GetStudyReq {
+    // pub level:i32,
+    // pub index:i32,
+    pub id:i32,
+}
+
+#[derive(Clone, Deserialize, Serialize, Debug)]
 pub struct SIO_PostStudyReq {
     pub level: i32,
     pub index: i32,

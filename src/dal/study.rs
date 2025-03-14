@@ -42,11 +42,10 @@ pub async fn get_last_index(level: i32) -> Result<i64, DbErr> {
     }
 }
 
-async fn get_model(con: Condition) -> Option<Value> {
+pub async fn get_model_index(level: i32) -> Option<Value> {
     let db = get_db().await.unwrap();
-
     let res = study::Entity::find()
-        .filter(con)
+        .filter(Condition::all().add(study::Column::Level.eq(level)))
         .order_by_asc(study::Column::Index)
         .into_json()
         .one(&db)
@@ -54,8 +53,15 @@ async fn get_model(con: Condition) -> Option<Value> {
         .unwrap();
     res
 }
-pub async fn get_model_index(level: i32) -> Option<Value> {
-    get_model(Condition::all().add(study::Column::Level.eq(level))).await
+pub async fn get_model(id: i32) -> Option<Value> {
+    let db = get_db().await.unwrap();
+    let res = study::Entity::find()
+        .filter(Condition::all().add(study::Column::Id.eq(id)))
+        .into_json()
+        .one(&db)
+        .await
+        .unwrap();
+    res
 }
 
 pub async fn insert(model: study::Model) -> Result<Model, DbErr> {
