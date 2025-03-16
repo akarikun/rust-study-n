@@ -26,9 +26,8 @@ const f7params = ref({
 onMounted(() => {
   f7ready(() => {
     // Call F7 APIs here
-    console.log(f7.colors);
-
-    $.socket_io_register();
+    // console.log(f7.colors);
+    $.socket_io_register('test');
   });
 });
 

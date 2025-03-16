@@ -1,5 +1,5 @@
 <template>
-  <f7-page :page-content="false">
+  <f7-page>
     <f7-navbar title="日语学习"></f7-navbar>
     <f7-toolbar bottom tabbar icons :scrollable="false">
       <f7-link tab-link="#tab-home-1" tab-link-active text="首页" icon-ios="f7:house" icon-md="material:house" />

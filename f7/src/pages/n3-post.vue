@@ -1,8 +1,7 @@
 <template>
-    <f7-page>
+    <f7-page name="n3-post">
         <f7-navbar back-link="返回" title="录入"></f7-navbar>
         <f7-list strong-ios dividers-ios inset>
-            <f7-block-title>添加</f7-block-title>
             <f7-list-input label="所属级别" :value="form.level" @change="form.level = $event.target.value" type="select">
                 <option value="4">N4-N5</option>
                 <option value="3">N3(目前只支持N3)</option>
@@ -51,7 +50,7 @@
 </template>
 
 <script setup>
-import { ref, toRefs, toRaw, onMounted, watch } from 'vue';
+import { ref, reactive, toRefs, toRaw, onMounted, watch } from 'vue';
 import { f7, f7ready } from 'framework7-vue';
 import * as $ from '../js/utils';
 
@@ -70,18 +69,46 @@ const form = ref(form_init());
 
 onMounted(() => {
     f7ready(() => {
-        setTimeout(() => {
-            $.MSG.get_last_index(form.value.level);
-        }, 1000)
-        $.MSG.register_page_msg(({ data, status }) => {
-            form.value.index = data + 1;
+        $.MSG.register_page(({ msg, data, status }) => {
+            if (msg == 'get_last_index_resp') {
+                if (status == 1) {
+                    form.value.index = data + 1;
+                }
+            } else if (msg == 'post_study_resp') {
+                if (status == 1) {
+                    form.value = form_init()
+                    f7.notification.create({
+                        icon: '<i class="icon icon-f7"></i>',
+                        title: '日语学习',
+                        //titleRightText: 'now',
+                        // subtitle: '操作成功',
+                        text: '提交成功',
+                        closeTimeout: 3000,
+                    }).open();
+                } else {
+                    f7.notification.create({
+                        icon: '<i class="icon icon-f7"></i>',
+                        title: '日语学习',
+                        //titleRightText: 'now',
+                        // subtitle: '操作成功',
+                        text: '提交异常',
+                        closeTimeout: 3000,
+                    }).open();
+                }
+            }
         });
+        setTimeout(() => {
+            update_index()
+        }, 1000)
     })
 });
-watch(form, (newVal, oldVal) => {
-    if (newVal.value && newVal.value.level != oldVal.value.level) {
-        $.MSG.get_last_index(newVal.level)
-    }
+
+const update_index = () => {
+    $.MSG.send_message('get_last_index', { level: parseInt(form.value.level) })
+}
+
+watch(() => form.value.level, (newVal, oldVal) => {
+    update_index()
 }, { deep: true })
 
 const customButtons = ref({
@@ -108,17 +135,8 @@ const customButtons = ref({
 });
 
 const post_data = () => {
-    console.log("提交数据：", JSON.stringify(form.value, null, 2));    
-    $.MSG.post_study(toRaw(form.value));
-    form.value = form_init()
-    f7.notification.create({
-        icon: '<i class="icon icon-f7"></i>',
-        title: '日语学习',
-        //titleRightText: 'now',
-        // subtitle: '操作成功',
-        text: '操作成功',
-        closeTimeout: 3000,
-    }).open();
+    console.log("提交数据：", JSON.stringify(form.value, null, 2));
+    $.MSG.send_message('post_study', toRaw(form.value));
 };
 </script>
 

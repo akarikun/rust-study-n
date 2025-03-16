@@ -12,12 +12,20 @@ use serde_json::Value;
 pub async fn get_list(index: i32, level: i32) -> Result<(Vec<Value>), DbErr> {
     let db = get_db().await?;
 
+    let mut cond = Condition::all().add(study::Column::Level.eq(level));
+    if index > 0 {
+        cond = cond
+            .add(study::Column::Index.gte(index - 5))
+            .add(study::Column::Index.gte(index + 5))
+    }
+
     let res = study::Entity::find()
         .filter(
-            Condition::all()
-                .add(study::Column::Level.eq(level))
-                .add(study::Column::Index.gte(index - 5))
-                .add(study::Column::Index.gte(index + 5)),
+            // Condition::all()
+            //     .add(study::Column::Level.eq(level))
+            //     .add(study::Column::Index.gte(index - 5))
+            //     .add(study::Column::Index.gte(index + 5)),
+            cond,
         )
         .order_by_asc(study::Column::Index)
         .into_json()

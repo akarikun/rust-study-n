@@ -16,8 +16,8 @@ struct Assets;
 async fn main() {
     unitily::init_env();
     let router = Router::new()
-        .push(Router::with_path("{**path}").get(static_embed::<Assets>().fallback("index.html")))
-        .push(router::config_router());
+        .push(router::config_router())
+        .push(Router::with_path("{**path}").get(static_embed::<Assets>().fallback("index.html")));
     let host = std::env::var("HOST").unwrap();
     let acceptor = TcpListener::new(host.clone()).bind().await;
     println!("http://{}", host);

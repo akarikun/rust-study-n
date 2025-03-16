@@ -83,6 +83,42 @@ async fn io_study(s: &SocketRef, data: &Value) {
         }
     } else if m.msg == "get_study_list" {
         if let Some(data) = m.data {
+            let data = match serde_json::from_value::<SIO_GetIndexReq>(data) {
+                Ok(m) => m,
+                Err(_) => return,
+            };
+            match study::get_list(0, data.level).await {
+                Ok(m) => {
+                    let vec = match serde_json::from_value::<Vec<SIO_PostStudyReq>>(
+                        serde_json::Value::Array(m),
+                    ) {
+                        Ok(m) => m,
+                        Err(e) => panic!("{:?}", e),
+                    };
+                    _ = s.emit(
+                        study_msg_resp,
+                        SocketIO_Resp::<Vec<SIO_PostStudyReq>> {
+                            status: 1,
+                            msg: msg_resp,
+                            data: Some(vec),
+                        },
+                    );
+                }
+                Err(e) => {
+                    _ = s.emit(
+                        study_msg_resp,
+                        SocketIO_Resp::<String> {
+                            status: 0,
+                            msg: msg_resp,
+                            data: Some(format!("{:?}", e.sql_err())),
+                        },
+                    );
+                }
+            };
+            println!("111");
+        }
+    } else if m.msg == "get_study" {
+        if let Some(data) = m.data {
             let data = match serde_json::from_value::<SIO_GetStudyReq>(data) {
                 Ok(m) => m,
                 Err(_) => return,
@@ -106,7 +142,7 @@ async fn io_study(s: &SocketRef, data: &Value) {
                     _ = s.emit(
                         study_msg_resp,
                         SocketIO_Resp::<String> {
-                            status: 1,
+                            status: 0,
                             msg: msg_resp,
                             data: Some(format!("")),
                         },
@@ -197,7 +233,7 @@ pub fn config_router() -> Router {
             .force_passed(true);
 
     Router::new()
-        // .push(Router::with_path("/login.do").post(login))
-        // .push(Router::with_hoop(auth_handler).path("check").get(check))
+        .push(Router::with_path("/login.do").post(login))
+        .push(Router::with_hoop(auth_handler).path("check").get(check))
         .push(Router::with_path("/socket.io").hoop(layer).goal(hello))
 }
