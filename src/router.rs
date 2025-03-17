@@ -1,8 +1,11 @@
 use crate::commons::model::{
     SIO_GetIndexReq, SIO_GetStudyReq, SIO_PostStudyReq, SocketIO_Req, SocketIO_Resp,
 };
-use crate::dal::study;
+use crate::commons::unitily::{log_print, string_default_val};
+use crate::dal::study::{self};
 use crate::entities;
+use salvo::http::StatusError;
+use salvo::jwt_auth::{ConstDecoder, HeaderFinder};
 use salvo::prelude::*;
 use sea_orm::sqlx::types::chrono::Local;
 use serde::{Deserialize, Serialize};
@@ -11,9 +14,6 @@ use socketioxide::extract::{Data, SocketRef};
 use socketioxide::SocketIo;
 use tower::ServiceBuilder;
 use tower_http::cors::CorsLayer;
-
-use salvo::http::StatusError;
-use salvo::jwt_auth::{ConstDecoder, HeaderFinder};
 
 const SECRET_KEY: &str = "YOUR_SECRET_KEY";
 
@@ -55,7 +55,7 @@ async fn get_last_index(level: i32) -> i64 {
 }
 
 async fn io_study(s: &SocketRef, data: &Value) {
-    println!("io_study {:?}", data);
+    log_print(format!("io_study {:?}", data));
 
     let study_msg_resp = "study_msg_resp";
     let m = match serde_json::from_value::<SocketIO_Req>(data.clone()) {
@@ -79,7 +79,7 @@ async fn io_study(s: &SocketRef, data: &Value) {
                     data: Some(id),
                 },
             );
-            println!("发送成功");
+            log_print(format!("发送成功"));
         }
     } else if m.msg == "get_study_list" {
         if let Some(data) = m.data {
@@ -115,7 +115,6 @@ async fn io_study(s: &SocketRef, data: &Value) {
                     );
                 }
             };
-            println!("111");
         }
     } else if m.msg == "get_study" {
         if let Some(data) = m.data {
@@ -156,6 +155,36 @@ async fn io_study(s: &SocketRef, data: &Value) {
                 Ok(m) => m,
                 Err(_) => return,
             };
+
+            let string_checked = |str| {
+                let (_, b) = string_default_val(str, "");
+                b
+            };
+
+            let mut err_msg = "";
+            if string_checked(&data.content) {
+                err_msg = "题目内容不能为空";
+            } else if string_checked(&data.a) {
+                err_msg = "答案A内容不能为空";
+            } else if string_checked(&data.b) {
+                err_msg = "答案B内容不能为空";
+            } else if string_checked(&data.c) {
+                err_msg = "答案C内容不能为空";
+            } else if string_checked(&data.d) {
+                err_msg = "答案D内容不能为空";
+            }
+            if !err_msg.is_empty() {
+                _ = s.emit(
+                    study_msg_resp,
+                    SocketIO_Resp::<&str> {
+                        status: 0,
+                        msg: msg_resp,
+                        data: Some(err_msg),
+                    },
+                );
+                return;
+            }
+
             let id = get_last_index(data.level).await;
             match study::insert(entities::study::Model {
                 id: (id + 1) as i32, //SeaORM生成的实体类漏了设置自动增长，这里先手动处理
@@ -199,12 +228,12 @@ async fn io_study(s: &SocketRef, data: &Value) {
 }
 
 fn on_connect(socket: SocketRef, Data(data): Data<Value>) {
-    println!(
+    log_print(format!(
         "Socket.IO connected: {:?} {:?} {:?}",
         socket.ns(),
         socket.id,
         data
-    );
+    ));
     if data["token"] == "test" {
         socket.on(
             "study_msg",

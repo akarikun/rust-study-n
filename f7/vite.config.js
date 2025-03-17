@@ -12,7 +12,7 @@ export default async () => {
       vue({ template: { compilerOptions: { isCustomElement: (tag) => tag.includes('swiper-') } } })
     ],
     root: SRC_DIR,
-    base: '/',
+    base: './',
     publicDir: PUBLIC_DIR,
     build: {
       outDir: BUILD_DIR,

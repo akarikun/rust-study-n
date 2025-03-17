@@ -91,7 +91,7 @@ onMounted(() => {
                         title: '日语学习',
                         //titleRightText: 'now',
                         // subtitle: '操作成功',
-                        text: '提交异常',
+                        text: data,
                         closeTimeout: 3000,
                     }).open();
                 }

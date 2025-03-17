@@ -27,3 +27,16 @@ pub async fn get_db() -> Result<DatabaseConnection, DbErr> {
     let db = sea_orm::Database::connect(&config_path).await?;
     Ok(db)
 }
+
+pub fn string_default_val<'a>(str: &'a str, def_val: &'a str) -> (&'a str, bool) {
+    if str.is_empty() {
+        return (def_val, true);
+    }
+    (str.trim(), false)
+}
+
+pub fn log_print(msg: String) {
+    if cfg!(debug_assertions) {
+        println!("log => {}", msg);
+    }
+}
