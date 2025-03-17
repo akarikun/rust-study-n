@@ -1,5 +1,5 @@
 <template>
-    <f7-page>
+    <f7-page class="page-user">
         <f7-list dividers-ios strong-ios outline-ios>
             <f7-list-item class="user-item" link="#">
                 <img src="/icons/avatar.webp" width="80" height="80" alt="avatar" />
@@ -19,9 +19,14 @@
 
 </script>
 <style scoped>
-    img { border-radius: 12px; margin-right:10px;}    
-    .descript{
-        width:100%;
-        text-align: center;
-    }
+img {
+    border-radius: 12px;
+    margin-right: 10px;
+}
+
+.descript {
+    width: 100%;
+    text-align: center;
+}
+
 </style>

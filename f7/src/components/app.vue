@@ -36,3 +36,6 @@ const props = defineProps({
   f7router: Object,
 })
 </script>
+<style scoped>
+
+</style>
