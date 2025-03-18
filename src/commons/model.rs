@@ -14,22 +14,23 @@ pub struct SocketIO_Resp<T> {
     pub data: Option<T>,
 }
 
-
 #[derive(Clone, Deserialize, Serialize, Debug)]
 pub struct SIO_GetIndexReq {
-    pub level:i32,
+    pub level: i32,
+    pub index: Option<i32>,
+    pub step: Option<i32>,
 }
 
 #[derive(Clone, Deserialize, Serialize, Debug)]
-pub struct 
-SIO_GetStudyReq {
-    // pub level:i32,
-    // pub index:i32,
-    pub id:i32,
+pub struct SIO_GetStudyReq {
+    pub level: i32,
+    pub index: i32,
+    // pub id:i32,
 }
 
 #[derive(Clone, Deserialize, Serialize, Debug)]
 pub struct SIO_PostStudyReq {
+    pub id: i32,
     pub level: i32,
     pub index: i32,
     pub content: String,

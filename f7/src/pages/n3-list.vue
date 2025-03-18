@@ -2,7 +2,7 @@
     <f7-page :page-content="false">
         <f7-list>
             <f7-list-item :title="format_content(item.index, item.content)" v-for="(item, index) in list" :key="index"
-                link="#"></f7-list-item>
+                :link="`/n3-post?id=${item.id}&level=${item.level}&index=${item.index}`"></f7-list-item>
         </f7-list>
     </f7-page>
 </template>
@@ -14,7 +14,7 @@ import * as $ from '../js/utils';
 const list = ref([])
 
 const format_content = (index, content) => {
-    return '(' + index + ') ' + content.replace(/<[^>]+>(.*)<\/[^>]+>/gim, RegExp.$1 || '').replace(/&nbsp;/gim, '');
+    return '(' + index + ') ' + content.replace(/<[^>]+>(.*)<\/[^>]+>/gim, '$1').replace(/&nbsp;/gim, ' ');
 }
 
 onMounted(() => {

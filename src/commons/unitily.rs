@@ -1,4 +1,5 @@
 use dotenv::dotenv;
+use migration::{Migrator, MigratorTrait};
 use sea_orm::{
     ColumnTrait, Condition, DatabaseConnection, DbErr, EntityOrSelect, EntityTrait, PaginatorTrait,
     QueryFilter,
@@ -22,9 +23,19 @@ pub fn get_cfg(key: &str) -> Result<String, env::VarError> {
     std::env::var(key)
 }
 
+static mut db_init: bool = false;
+
 pub async fn get_db() -> Result<DatabaseConnection, DbErr> {
     let config_path = env::var("DATABASE_URL").expect("配置<DATABASE_URL>不存在");
     let db = sea_orm::Database::connect(&config_path).await?;
+    if unsafe { db_init } {
+        return Ok(db);
+    } else {
+        Migrator::up(&db, None).await?;
+        unsafe {
+            db_init = true;
+        }
+    }
     Ok(db)
 }
 

@@ -4,10 +4,12 @@ use crate::commons::model::{
 use crate::commons::unitily::{log_print, string_default_val};
 use crate::dal::study::{self};
 use crate::entities;
+use migration::ExprTrait;
 use salvo::http::StatusError;
 use salvo::jwt_auth::{ConstDecoder, HeaderFinder};
 use salvo::prelude::*;
 use sea_orm::sqlx::types::chrono::Local;
+use sea_orm::Set;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use socketioxide::extract::{Data, SocketRef};
@@ -62,7 +64,6 @@ async fn io_study(s: &SocketRef, data: &Value) {
         Ok(m) => m,
         Err(_) => return,
     };
-    // dbg!(&m);
     let msg_resp = format!("{}_resp", m.msg);
     if m.msg == "get_last_index" {
         if let Some(data) = m.data {
@@ -87,7 +88,9 @@ async fn io_study(s: &SocketRef, data: &Value) {
                 Ok(m) => m,
                 Err(_) => return,
             };
-            match study::get_list(0, data.level).await {
+            let step = data.step.or(Some(0)).unwrap();
+            let index = data.index.or(Some(0)).unwrap();
+            match study::get_list(index, data.level, step).await {
                 Ok(m) => {
                     let vec = match serde_json::from_value::<Vec<SIO_PostStudyReq>>(
                         serde_json::Value::Array(m),
@@ -105,12 +108,13 @@ async fn io_study(s: &SocketRef, data: &Value) {
                     );
                 }
                 Err(e) => {
+                    log_print(format!("{}", e));
                     _ = s.emit(
                         study_msg_resp,
-                        SocketIO_Resp::<String> {
+                        SocketIO_Resp::<Vec<SIO_PostStudyReq>> {
                             status: 0,
                             msg: msg_resp,
-                            data: Some(format!("{:?}", e.sql_err())),
+                            data: Some(Vec::new()),
                         },
                     );
                 }
@@ -120,30 +124,35 @@ async fn io_study(s: &SocketRef, data: &Value) {
         if let Some(data) = m.data {
             let data = match serde_json::from_value::<SIO_GetStudyReq>(data) {
                 Ok(m) => m,
-                Err(_) => return,
-            };
-            let res = match study::get_model(data.id).await {
-                Some(m) => m,
-                None => return,
-            };
-            match serde_json::from_value::<SIO_PostStudyReq>(res) {
-                Ok(m) => {
-                    _ = s.emit(
-                        study_msg_resp,
-                        SocketIO_Resp::<SIO_PostStudyReq> {
-                            status: 1,
-                            msg: msg_resp,
-                            data: Some(m),
-                        },
-                    );
+                Err(e) => {
+                    // panic!("{:?}", e);
+                    return;
                 }
-                Err(_) => {
+            };
+            match study::get_list(data.index, data.level, 0).await {
+                Ok(m) => {
+                    if m.len() > 0 {
+                        let t = m[0].clone();
+                        dbg!(&t);
+                        let m = serde_json::from_value::<SIO_PostStudyReq>(t).unwrap();
+                        _ = s.emit(
+                            study_msg_resp,
+                            SocketIO_Resp::<SIO_PostStudyReq> {
+                                status: 1,
+                                msg: msg_resp,
+                                data: Some(m),
+                            },
+                        );
+                        return;
+                    }
+                }
+                Err(e) => {
                     _ = s.emit(
                         study_msg_resp,
                         SocketIO_Resp::<String> {
                             status: 0,
                             msg: msg_resp,
-                            data: Some(format!("")),
+                            data: Some(format!("{:?}", e.sql_err())),
                         },
                     );
                 }
@@ -185,9 +194,8 @@ async fn io_study(s: &SocketRef, data: &Value) {
                 return;
             }
 
-            let id = get_last_index(data.level).await;
-            match study::insert(entities::study::Model {
-                id: (id + 1) as i32, //SeaORM生成的实体类漏了设置自动增长，这里先手动处理
+            let mut m = entities::study::Model {
+                id: data.id,
                 level: data.level,
                 index: data.index,
                 content: data.content,
@@ -199,30 +207,59 @@ async fn io_study(s: &SocketRef, data: &Value) {
                 result: data.result,
                 r#type: data.r#type,
                 create_date: Local::now().naive_local(),
-            })
-            .await
-            {
-                Ok(res) => {
-                    _ = s.emit(
-                        study_msg_resp,
-                        SocketIO_Resp::<i32> {
-                            status: 1,
-                            msg: msg_resp,
-                            data: Some(res.id),
-                        },
-                    );
-                }
-                Err(e) => {
-                    _ = s.emit(
-                        study_msg_resp,
-                        SocketIO_Resp::<String> {
-                            status: 0,
-                            msg: msg_resp,
-                            data: Some(format!("{:?}", e.sql_err())),
-                        },
-                    );
-                }
             };
+            //添加
+            if data.id == 0 {
+                let id = get_last_index(data.level).await as i32;
+                m.id = id + 1; //SeaORM生成的实体类漏了设置自动增长，这里先手动处理
+                match study::insert(m).await {
+                    Ok(res) => {
+                        _ = s.emit(
+                            study_msg_resp,
+                            SocketIO_Resp::<i32> {
+                                status: 1,
+                                msg: msg_resp,
+                                data: Some(res.id),
+                            },
+                        );
+                    }
+                    Err(e) => {
+                        _ = s.emit(
+                            study_msg_resp,
+                            SocketIO_Resp::<String> {
+                                status: 0,
+                                msg: msg_resp,
+                                data: Some(format!("{:?}", e.sql_err())),
+                            },
+                        );
+                    }
+                };
+            } else {
+                match study::update(m).await {
+                    Ok(res) => {
+                        dbg!(&res);
+                        _ = s.emit(
+                            study_msg_resp,
+                            SocketIO_Resp::<i32> {
+                                status: 1,
+                                msg: msg_resp,
+                                data: Some(res.id),
+                            },
+                        );
+                    }
+                    Err(e) => {
+                        dbg!(&e);
+                        _ = s.emit(
+                            study_msg_resp,
+                            SocketIO_Resp::<String> {
+                                status: 0,
+                                msg: msg_resp,
+                                data: Some(format!("{:?}", e.sql_err())),
+                            },
+                        );
+                    }
+                };
+            }
         }
     }
 }

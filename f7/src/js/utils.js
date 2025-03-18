@@ -46,12 +46,12 @@ export const socket_io_register = (token) => {
     ioc.on('connect', () => {
         console.log('io connect');
         window.addEventListener(study_server_msg, (data) => {
-            console.log('send => ', data.detail)
+            // console.log('send => ', data.detail)
             ioc.emit('study_msg', data.detail)
         }, false);
     });
     ioc.on('study_msg_resp', data => {
-        console.log('recv => ', 'study_msg_resp', data);
+        // console.log('recv => ', 'study_msg_resp', data);
         dispatchEvent(new CustomEvent('study_page_msg', {
             detail: data
         }));

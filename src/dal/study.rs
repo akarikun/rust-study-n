@@ -1,33 +1,25 @@
 use crate::commons::unitily::get_db;
-use crate::commons::unitily::string_default_val;
-use crate::entities;
 use crate::entities::{study, study::Model};
-use migration::ExprTrait;
-use salvo::rate_limiter::QuotaGetter;
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, Condition, DatabaseConnection, DbErr, EntityOrSelect,
     EntityTrait, PaginatorTrait, QueryFilter, QueryOrder,
 };
 use serde_json::Value;
 
-pub async fn get_list(index: i32, level: i32) -> Result<(Vec<Value>), DbErr> {
+pub async fn get_list(index: i32, level: i32, step: i32) -> Result<Vec<Value>, DbErr> {
     let db = get_db().await?;
-
     let mut cond = Condition::all().add(study::Column::Level.eq(level));
     if index > 0 {
+        cond = cond.add(study::Column::Index.eq(index));
+    } 
+    if step > 0 {
         cond = cond
-            .add(study::Column::Index.gte(index - 5))
-            .add(study::Column::Index.gte(index + 5))
+            .add(study::Column::Index.gte(index - step))
+            .add(study::Column::Index.lte(index + step))
     }
 
     let res = study::Entity::find()
-        .filter(
-            // Condition::all()
-            //     .add(study::Column::Level.eq(level))
-            //     .add(study::Column::Index.gte(index - 5))
-            //     .add(study::Column::Index.gte(index + 5)),
-            cond,
-        )
+        .filter(cond)
         .order_by_asc(study::Column::Index)
         .into_json()
         .all(&db)
@@ -81,8 +73,8 @@ pub async fn insert(model: study::Model) -> Result<Model, DbErr> {
 
 pub async fn update(model: study::Model) -> Result<Model, DbErr> {
     let db = get_db().await?;
-    let study: study::ActiveModel = model.into();
-    study.update(&db).await
+    let m: study::ActiveModel = model.into();
+    m.reset_all().update(&db).await
 }
 
 pub async fn delete(id: i32) -> Result<u64, DbErr> {
