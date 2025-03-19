@@ -162,7 +162,7 @@ async fn io_study(s: &SocketRef, data: &Value) {
         if let Some(data) = m.data {
             let data = match serde_json::from_value::<SIO_PostStudyReq>(data) {
                 Ok(m) => m,
-                Err(_) => return,
+                Err(e) => panic!("{:?}",e),
             };
 
             let string_checked = |str| {

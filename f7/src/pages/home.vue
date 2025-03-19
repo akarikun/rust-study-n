@@ -3,7 +3,7 @@
     <f7-navbar title="日语学习"></f7-navbar>
     <f7-toolbar bottom tabbar icons :scrollable="false">
       <f7-link tab-link="#tab-home-1" tab-link-active text="首页" icon-ios="f7:house" icon-md="material:house" />
-      <f7-link tab-link="#tab-home-2" text="录入" icon-ios="f7:cloud_upload" icon-md="material:cloud_upload" />
+      <!-- <f7-link tab-link="#tab-home-2" text="录入" icon-ios="f7:cloud_upload" icon-md="material:cloud_upload" /> -->
       <f7-link tab-link="#tab-home-3" text="我的" icon-ios="f7:face_smiling" icon-md="material:face_smiling" />
     </f7-toolbar>
 
@@ -24,9 +24,9 @@
           </f7-block>
         </f7-block>
       </f7-tab>
-      <f7-tab id="tab-home-2" class="page-content">
+      <!-- <f7-tab id="tab-home-2" class="page-content">
         <N3List></N3List>        
-      </f7-tab>
+      </f7-tab> -->
       <f7-tab id="tab-home-3" class="page-content">
         <User></User>
       </f7-tab>

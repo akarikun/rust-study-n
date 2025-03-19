@@ -5,3 +5,4 @@ Cargo.lock
 data.db
 node_modules
 /web/
+package-lock.json

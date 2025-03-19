@@ -1,18 +1,20 @@
 <template>
     <f7-page name="n3-post">
-        <f7-navbar back-link="返回" :title="`${form.id > 0 ? '编辑(' + form.id + ')' : '录入'}`"></f7-navbar>
+        <f7-navbar back-link="返回" :title="$.format_title(form)"></f7-navbar>
 
         <f7-list strong-ios dividers-ios inset>
+            <!-- <f7-list-input label="所属级别" :value="form.level" @change="form.level = $event.target.value" type="select"
+            :disabled="form.id>0"> -->
             <f7-list-input label="所属级别" :value="form.level" @change="form.level = $event.target.value" type="select"
-            :disabled="form.id>0">
-                <option value="4">N4-N5</option>
-                <option value="3">N3(目前只支持N3)</option>
-                <option value="2">N2</option>
-                <option value="1">N1</option>
+            disabled>
+                <option :value="4">N4-N5</option>
+                <option :value="3">N3(目前只支持N3)</option>
+                <option :value="2">N2</option>
+                <option :value="1">N1</option>
             </f7-list-input>
 
             <f7-list-input label="题序" type="text" :value="form.index" @input="form.index = $event.target.value"
-                placeholder="题序" clear-button readonly></f7-list-input>
+                placeholder="题序" readonly></f7-list-input>
 
             <f7-list-item>
                 <f7-text-editor placeholder="输入题目" :value="form.content" @input="form.content = $event.target.innerHTML"
@@ -20,22 +22,22 @@
             </f7-list-item>
 
             <f7-list-input label="答案A" type="text" :value="form.a" @input="form.a = $event.target.value"
-                placeholder="答案A" clear-button></f7-list-input>
+                placeholder="答案A"></f7-list-input>
             <f7-list-input label="答案B" type="text" :value="form.b" @input="form.b = $event.target.value"
-                placeholder="答案B" clear-button></f7-list-input>
+                placeholder="答案B"></f7-list-input>
             <f7-list-input label="答案C" type="text" :value="form.c" @input="form.c = $event.target.value"
-                placeholder="答案C" clear-button></f7-list-input>
+                placeholder="答案C"></f7-list-input>
             <f7-list-input label="答案D" type="text" :value="form.d" @input="form.d = $event.target.value"
-                placeholder="答案D" clear-button></f7-list-input>
+                placeholder="答案D"></f7-list-input>
 
-            <f7-list-input label="正确答案" :value="form.result" @change="form.result = $event.target.value" type="select">
-                <option value="1">A</option>
-                <option value="2">B</option>
-                <option value="3">C</option>
-                <option value="4">D</option>
+            <f7-list-input label="正确答案" :value="form.result" @change="form.result = parseInt($event.target.value)" type="select">
+                <option :value="1">A</option>
+                <option :value="2">B</option>
+                <option :value="3">C</option>
+                <option :value="4">D</option>
             </f7-list-input>
 
-            <f7-list-input label="类型备注" :value="form.type" @change="form.type = $event.target.value" type="select">
+            <f7-list-input label="类型备注" :value="form.type" @change="form.type = parseInt($event.target.value)" type="select">
                 <option value="0">一般</option>
                 <option value="1">语法难</option>
             </f7-list-input>
@@ -75,21 +77,19 @@ const form_init = () => {
 
 const form = ref(form_init());
 
+// const format_title = (form)=>{
+//     // return `${form.id > 0 ? '编辑(' + form.id + ')' : '录入'}`
+//     let level = ['','N1','N2','N3','N4-N5'][form.level];
+//     return form.id > 0 ? `编辑(${level} - ${form.id})`:`录入`
+// }
+
 onMounted(() => {
     f7ready(() => {
         let { level, index, id } = props.f7route.query;
         level = parseInt(level);
         index = parseInt(index);
         id = parseInt(id);
-
-        const is_edit = !!id;
-        setTimeout(() => {
-            if (is_edit) {
-                $.MSG.send_message('get_study', { level, index });
-            } else {
-                update_index()
-            }
-        }, 1000);
+        const is_edit = !!id;        
         $.MSG.register_page(({ msg, data, status }) => {
             if (msg == 'get_last_index_resp') {
                 if (is_edit == 0 && status == 1) {
@@ -124,6 +124,11 @@ onMounted(() => {
                 }
             }
         });
+        if (is_edit) {
+            $.MSG.send_message('get_study', { level, index });
+        } else {
+            update_index()
+        }
     })
 });
 
@@ -148,19 +153,20 @@ const customButtons = ref({
         content: '<b>_)</b>',
         onClick() {
             document.execCommand('underline');
-            document.execCommand('insertText', false, '  ) ');
+            document.execCommand('insertText', false, ' ) ');
         },
     },
     '___': {
         content: '<b>___</b>',
         onClick() {
-            document.execCommand('insertText', false, '_______');
+            document.execCommand('insertText', false, '____');
         },
     },
 });
 
 const post_data = () => {
     let json = toRaw(form.value);
+    // console.log(json);
     $.MSG.send_message('post_study', json);
 };
 </script>

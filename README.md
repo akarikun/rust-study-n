@@ -40,12 +40,12 @@ sea-orm-cli migrate up
 sea-orm-cli generate entity -o src/entities # 生成实体
 ```
 
-#### 发布可执行文件
+### 发布可执行文件
 ```
 cd f7 && npm run build && cd .. && cargo build --release
 ```
 
-#### rust.yaml本地测试
+### rust.yaml本地测试
 ```
 # 下载act工具 https://github.com/nektos/act/releases
 # 软链接 ln -sf <path>/act /usr/bin/act

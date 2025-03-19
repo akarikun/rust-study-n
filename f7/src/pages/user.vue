@@ -8,7 +8,8 @@
                     <li>等级: N3</li>
                 </ul>
             </f7-list-item>
-            <f7-list-item title="录入" link="/n3-post" />
+            <f7-list-item title="查看录入列表(N3)" link="/n3-list?level=3" />
+            <f7-list-item title="录入(N3)" class="upload_study" link="/n3-post?level=3" />
         </f7-list>
         <f7-block>
             <div class="descript">日语学习@v1.0.0</div>
@@ -29,4 +30,7 @@ img {
     text-align: center;
 }
 
+.upload_study{
+    color:red;
+}
 </style>

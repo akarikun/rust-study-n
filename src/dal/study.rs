@@ -2,27 +2,27 @@ use crate::commons::unitily::get_db;
 use crate::entities::{study, study::Model};
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, Condition, DatabaseConnection, DbErr, EntityOrSelect,
-    EntityTrait, PaginatorTrait, QueryFilter, QueryOrder,
+    EntityTrait, PaginatorTrait, QueryFilter, QueryOrder,DatabaseBackend,
 };
 use serde_json::Value;
 
 pub async fn get_list(index: i32, level: i32, step: i32) -> Result<Vec<Value>, DbErr> {
     let db = get_db().await?;
     let mut cond = Condition::all().add(study::Column::Level.eq(level));
-    if index > 0 {
-        cond = cond.add(study::Column::Index.eq(index));
-    } 
+    
     if step > 0 {
         cond = cond
             .add(study::Column::Index.gte(index - step))
             .add(study::Column::Index.lte(index + step))
-    }
+    } else if index > 0 {
+        cond = cond.add(study::Column::Index.eq(index));
+    }    
 
     let res = study::Entity::find()
         .filter(cond)
         .order_by_asc(study::Column::Index)
         .into_json()
-        .all(&db)
+        .all(&db)        
         .await?;
     Ok(res)
 }

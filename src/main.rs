@@ -6,7 +6,7 @@ mod commons;
 mod dal;
 mod entities;
 mod router;
-use commons::unitily;
+use commons::unitily::{init_env,init_logger};
 
 #[derive(RustEmbed)]
 #[folder = "web"]
@@ -14,7 +14,8 @@ struct Assets;
 
 #[tokio::main]
 async fn main() {
-    unitily::init_env();
+    init_env();
+    init_logger();    
     let router = Router::new()
         .push(router::config_router())
         .push(Router::with_path("{**path}").get(static_embed::<Assets>().fallback("index.html")));
