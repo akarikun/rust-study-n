@@ -26,12 +26,12 @@ features = [
 ]
 ```
 
-#### 3.创建实体模板
+#### 4.创建实体模板
 ```
 sea-orm-cli migrate generate <entity>
 ```
 
-#### 4.生成实体类
+#### 5.生成实体类
 ```
 sea-orm-cli migrate up
 # sea-orm-cli migrate down

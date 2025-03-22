@@ -2,14 +2,13 @@ use crate::commons::model::{
     SIO_GetIndexReq, SIO_GetStudyReq, SIO_PostStudyReq, SocketIO_Req, SocketIO_Resp,
 };
 use crate::commons::unitily::{log_print, string_default_val};
+use crate::commons::wechat;
 use crate::dal::study::{self};
 use crate::entities;
-use migration::ExprTrait;
 use salvo::http::StatusError;
 use salvo::jwt_auth::{ConstDecoder, HeaderFinder};
 use salvo::prelude::*;
 use sea_orm::sqlx::types::chrono::Local;
-use sea_orm::Set;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use socketioxide::extract::{Data, SocketRef};
@@ -162,7 +161,7 @@ async fn io_study(s: &SocketRef, data: &Value) {
         if let Some(data) = m.data {
             let data = match serde_json::from_value::<SIO_PostStudyReq>(data) {
                 Ok(m) => m,
-                Err(e) => panic!("{:?}",e),
+                Err(e) => panic!("{:?}", e),
             };
 
             let string_checked = |str| {
@@ -299,7 +298,63 @@ pub fn config_router() -> Router {
             .force_passed(true);
 
     Router::new()
+        .push(wechat_router())
         .push(Router::with_path("/login.do").post(login))
         .push(Router::with_hoop(auth_handler).path("check").get(check))
         .push(Router::with_path("/socket.io").hoop(layer).goal(hello))
+}
+
+fn wechat_router() -> Router {
+    Router::new()
+        .push(Router::with_path("/wechat/mp/login.do").get(wechat_mp_login))
+        .push(Router::with_path("/wechat/mp/home.do").get(wechat_mp_home))
+}
+
+//引导用户登录
+#[handler]
+async fn wechat_mp_login(req: &mut Request, res: &mut Response) {
+    let state = req.query::<String>("state").or(Some(format!(""))).unwrap();
+    if state.is_empty() {
+        res.status_code(StatusCode::NOT_FOUND);
+        return;
+    }
+    let mut redirect_uri = format!("/wechat/mp/home");
+    let wechat_token = wechat::WechatMPToken::load().unwrap();
+    let url = wechat_token
+        .get_redirect_login_url(redirect_uri, state)
+        .await
+        .expect("微信公众号参数异常");
+    res.render(Redirect::found(url));
+    // res.render("login");
+}
+//获得授权后跳到这里
+#[handler]
+async fn wechat_mp_home(req: &mut Request, res: &mut Response) {
+    let code = req.query::<String>("code").or(Some(format!(""))).unwrap();
+    let state = req.query::<String>("state").or(Some(format!(""))).unwrap();
+    let guid = req.query::<String>("guid").or(Some(format!(""))).unwrap();
+    if !code.is_empty() && !state.is_empty() && !guid.is_empty() {
+        let wechat_token = wechat::WechatMPToken::load().unwrap();
+        let (user, host) = wechat_token.user_login(code).await.unwrap();
+        //绑定
+        if !guid.is_empty() {}
+        //查询表里是否有openid
+        let user_token = format!("");
+        //没有的话还要再调用wechat_token.get_user();
+
+        res.render(Redirect::found(format!(
+            "{}/wechat/mp/home?t={}&token={}",
+            host, state, user_token
+        )));
+        return;
+    }
+    let t = req.query::<String>("t").or(Some(format!(""))).unwrap();
+    let token = req.query::<String>("token").or(Some(format!(""))).unwrap();
+    if !t.is_empty() && !token.is_empty() {
+        //判断用户token登录状态
+
+        res.render(Redirect::found("/"));
+        return;
+    }
+    res.status_code(StatusCode::NOT_FOUND);
 }

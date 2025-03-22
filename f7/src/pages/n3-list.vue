@@ -1,7 +1,6 @@
 <template>
     <f7-page ptr :ptr-mousewheel="true" @ptr:refresh="loadMore">
         <f7-navbar back-link="返回" :title="`${$.format_level(f7route.query.level)}列表`"></f7-navbar>
-        <f7-block-title></f7-block-title>
         <f7-list strong-ios dividers-ios outline-ios>
             <f7-list-item :title="format_content(item.index, item.content)" v-for="(item, index) in list" :key="index"
                 :link="`/n3-post?id=${item.id}&level=${item.level}&index=${item.index}`" />
