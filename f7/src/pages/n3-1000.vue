@@ -92,7 +92,6 @@ const tab_show = (e) => {
 const send_message = () => {
     let level = 3;
     let { index } = store.state.booklist['n3'];
-    console.log(index);
     $.MSG.send_message('get_study_list', { level, index, step: 2 })
 }
 

@@ -51,3 +51,5 @@ cd f7 && npm run build && cd .. && cargo build --release
 # 软链接 ln -sf <path>/act /usr/bin/act
 act -j build 
 ```
+
+![001.gif](https://raw.githubusercontent.com/akarikun/rust-study-n/main/imgs/001.gif)

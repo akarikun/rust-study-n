@@ -41,7 +41,8 @@ onMounted(() => {
 
 })
 const login_handle = () => {
-    location.href= '/wechat/mp/login.do?state=wechat_mp'
+    f7.dialog.alert('功能开发中...');
+    // location.href= '/wechat/mp/login.do?state=wechat_mp'
     // login_status.value = {};
     // store.dispatch('set_user_info', true);
 }

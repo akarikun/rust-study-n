@@ -6,32 +6,10 @@ use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-const WECHAT_TOKEN_FILE_PATH: &str = "wechat_token.json";
-const WECHAT_CONFIG_FILE_PATH: &str = "wechat_config.json";
-const API_URL: &str = "http://localhost";
+use super::unitily::CONFIG as config;
+const WECHAT_TOKEN_FILE_PATH: &str = "wechat_token.json"; // token需要经常变动，这里用新的配置
 
 //https://developers.weixin.qq.com/doc/offiaccount/Getting_Started/Overview.html
-
-
-
-#[derive(Serialize, Deserialize, Debug, Default)]
-struct WechatMPConfig {
-    pub token: String,
-    pub appid: String,
-    pub encodingAESKey: String,
-    pub checkSignature: bool,
-    pub appSecret: String,
-    pub host: String,
-}
-
-impl WechatMPConfig {
-    pub fn load() -> std::io::Result<Self> {
-        let json_str = fs::read_to_string(WECHAT_CONFIG_FILE_PATH)
-            .expect("wechat_config.json文件不存在或配置异常");
-        let config: Self = serde_json::from_str(&json_str)?;
-        Ok(config)
-    }
-}
 
 #[derive(Serialize, Deserialize, Debug, Default)]
 pub struct WechatMPToken {
@@ -66,14 +44,14 @@ impl WechatMPToken {
         Ok(token)
     }
     pub async fn get_token(&self) -> std::io::Result<String> {
-        let config = WechatMPConfig::load()?;
+        let mp_config = config.clone().mp.unwrap();
         let now = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap()
             .as_millis();
         if now > self.expires_ts as u128 {
             let url = format!("https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid={}&secret={}",
-                config.appid, config.appSecret
+            mp_config.appid, mp_config.appSecret
             );
             let url = "https://google.com";
             if cfg!(debug_assertions) {
@@ -98,16 +76,16 @@ impl WechatMPToken {
         redirect_uri: String,
         state: String,
     ) -> std::io::Result<String> {
-        let config = WechatMPConfig::load()?;
-        let scope = "snsapi_userinfo";
+        let mp_config = config.clone().mp.unwrap();
 
-        let url = format!("https://open.weixin.qq.com/connect/oauth2/authorize?appid={}&redirect_uri={}&response_type=code&scope={}&state={}#wechat_redirect",config.appid,format!("{}{}",config.host,redirect_uri),scope,state);
+        let scope = "snsapi_userinfo";
+        let url = format!("https://open.weixin.qq.com/connect/oauth2/authorize?appid={}&redirect_uri={}&response_type=code&scope={}&state={}#wechat_redirect",mp_config.appid,format!("{}{}",mp_config.host,redirect_uri),scope,state);
         dbg!(&url);
         Ok(url)
     }
     pub async fn user_login(&self, code: String) -> Result<(WechatMPUser, String), String> {
-        let config = WechatMPConfig::load().expect("");
-        let url = format!("https://api.weixin.qq.com/sns/oauth2/access_token?appid={}&secret={}&code={}&grant_type=authorization_code",config.appid,config.appSecret,code);
+        let mp_config = config.clone().mp.unwrap();
+        let url = format!("https://api.weixin.qq.com/sns/oauth2/access_token?appid={}&secret={}&code={}&grant_type=authorization_code",mp_config.appid,mp_config.appSecret,code);
         let client = Client::new();
         if let Ok(response) = client.get(url).send().await {
             let text = response.text().await.unwrap();
@@ -117,9 +95,11 @@ impl WechatMPToken {
         };
         Err(format!("user_login 异常"))
     }
-    pub async fn get_user(access_token:String,openid:String)-> Result<String, String>{
-        let config = WechatMPConfig::load().expect("");
-        let url = format!("https://api.weixin.qq.com/sns/userinfo?access_token=${access_token}&openid=${openid}");
+    pub async fn get_user(access_token: String, openid: String) -> Result<String, String> {
+        let mp_config = config.mp.clone().unwrap();
+        let url = format!(
+            "https://api.weixin.qq.com/sns/userinfo?access_token=${access_token}&openid=${openid}"
+        );
         let client = Client::new();
         if let Ok(response) = client.get(url).send().await {
             let text = response.text().await.unwrap();
