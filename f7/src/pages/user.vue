@@ -35,7 +35,7 @@
 import { ref, onMounted, watch } from 'vue';
 import { f7, f7ready } from 'framework7-vue';
 import store from '../js/store';
-const login_status = ref(null);// store.getters.user.value 
+const login_status = ref(null);// store.state.user
 
 onMounted(() => {
 
@@ -43,7 +43,7 @@ onMounted(() => {
 const login_handle = () => {
     location.href= '/wechat/mp/login.do?state=wechat_mp'
     // login_status.value = {};
-    // store.dispatch('setUserInfo', true);
+    // store.dispatch('set_user_info', true);
 }
 
 </script>

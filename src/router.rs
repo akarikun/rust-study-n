@@ -263,6 +263,10 @@ async fn io_study(s: &SocketRef, data: &Value) {
     }
 }
 
+fn token_valid(data: Value, val: &str) -> bool {
+    data["token"] == val
+}
+
 fn on_connect(socket: SocketRef, Data(data): Data<Value>) {
     log_print(format!(
         "Socket.IO connected: {:?} {:?} {:?}",
@@ -270,7 +274,7 @@ fn on_connect(socket: SocketRef, Data(data): Data<Value>) {
         socket.id,
         data
     ));
-    if data["token"] == "test" {
+    if token_valid(data, "test") {
         socket.on(
             "study_msg",
             move |s: SocketRef, data: Data<Value>| async move {
@@ -278,7 +282,6 @@ fn on_connect(socket: SocketRef, Data(data): Data<Value>) {
             },
         );
     } else {
-        dbg!(&data);
         _ = socket.disconnect();
     }
 }
@@ -310,7 +313,7 @@ fn wechat_router() -> Router {
         .push(Router::with_path("/wechat/mp/home.do").get(wechat_mp_home))
 }
 
-//引导用户登录
+//引导用户登录(开发的帐号没有登录权限，暂时先放弃这块)
 #[handler]
 async fn wechat_mp_login(req: &mut Request, res: &mut Response) {
     let state = req.query::<String>("state").or(Some(format!(""))).unwrap();

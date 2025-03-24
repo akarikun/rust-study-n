@@ -71,7 +71,7 @@ impl WechatMPToken {
             .duration_since(UNIX_EPOCH)
             .unwrap()
             .as_millis();
-        if now > self.expires_ts.into() {
+        if now > self.expires_ts as u128 {
             let url = format!("https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid={}&secret={}",
                 config.appid, config.appSecret
             );
