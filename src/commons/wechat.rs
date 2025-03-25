@@ -79,7 +79,7 @@ impl WechatMPToken {
         let mp_config = config.clone().mp.unwrap();
 
         let scope = "snsapi_userinfo";
-        let url = format!("https://open.weixin.qq.com/connect/oauth2/authorize?appid={}&redirect_uri={}&response_type=code&scope={}&state={}#wechat_redirect",mp_config.appid,format!("{}{}",mp_config.host,redirect_uri),scope,state);
+        let url = format!("https://open.weixin.qq.com/connect/oauth2/authorize?appid={}&redirect_uri={}&response_type=code&scope={}&state={}#wechat_redirect",mp_config.appid,mp_config.host,scope,state);
         dbg!(&url);
         Ok(url)
     }

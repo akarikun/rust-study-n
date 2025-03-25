@@ -23,7 +23,7 @@
                     <li>等级: N3 </li>
                 </ul>
             </f7-list-item>
-            <f7-list-item title="查看录入列表(N3)" link="/n3-list?level=3" />
+            <f7-list-item title="查看录入列表(N3)" link="#" @click="handle_list" />
             <f7-list-item title="录入(N3)" class="upload_study" link="/n3-post?level=3" v-if="login_status" />
         </f7-list>
         <f7-block>
@@ -34,6 +34,7 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue';
 import { f7, f7ready } from 'framework7-vue';
+import * as $ from '../js/utils';
 import store from '../js/store';
 const login_status = ref(null);// store.state.user
 
@@ -41,10 +42,17 @@ onMounted(() => {
 
 })
 const login_handle = () => {
-    f7.dialog.alert('功能开发中...');
+    $.alert('功能开发中...');
     // location.href= '/wechat/mp/login.do?state=wechat_mp'
     // login_status.value = {};
     // store.dispatch('set_user_info', true);
+}
+const handle_list = () => {
+    if (login_status.value) {
+        $.go('/n3-list?level=3');
+    } else {
+        $.alert('需要登录后查看');
+    }
 }
 
 </script>

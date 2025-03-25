@@ -20,7 +20,7 @@ impl Config {
             let json_str = serde_json::to_string_pretty(&Self {
                 host: "127.0.0.1:3000".to_string(),
                 db: "sqlite://data.db?mode=rwc".to_string(),
-                dbtype: 0,
+                dbtype: 0,//0:sqlite
                 dbg: true,
                 mp: Some(WechatMPConfig::default()),
             })?;

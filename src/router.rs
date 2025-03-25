@@ -1,7 +1,9 @@
+use std::collections::BTreeSet;
+
 use crate::commons::model::{
     SIO_GetIndexReq, SIO_GetStudyReq, SIO_PostStudyReq, SocketIO_Req, SocketIO_Resp,
 };
-use crate::commons::unitily::{log_print, string_default_val};
+use crate::commons::unitily::{log_print, string_default_val, CONFIG as config};
 use crate::commons::wechat;
 use crate::dal::study::{self};
 use crate::entities;
@@ -11,6 +13,7 @@ use salvo::prelude::*;
 use sea_orm::sqlx::types::chrono::Local;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use sha1::{Digest, Sha1};
 use socketioxide::extract::{Data, SocketRef};
 use socketioxide::SocketIo;
 use tower::ServiceBuilder;
@@ -158,6 +161,18 @@ async fn io_study(s: &SocketRef, data: &Value) {
             };
         }
     } else if m.msg == "post_study" {
+        if !token_valid(&data, "test") {
+            _ = s.emit(
+                study_msg_resp,
+                SocketIO_Resp::<&str> {
+                    status: 0,
+                    msg: msg_resp,
+                    data: Some("没有操作权限"),
+                },
+            );
+            return;
+        }
+
         if let Some(data) = m.data {
             let data = match serde_json::from_value::<SIO_PostStudyReq>(data) {
                 Ok(m) => m,
@@ -263,8 +278,9 @@ async fn io_study(s: &SocketRef, data: &Value) {
     }
 }
 
-fn token_valid(data: Value, val: &str) -> bool {
-    data["token"] == val
+fn token_valid(data: &Value, val: &str) -> bool {
+    let token = data["token"].clone();
+    token.is_string() && token == val && !val.is_empty()
 }
 
 fn on_connect(socket: SocketRef, Data(data): Data<Value>) {
@@ -274,7 +290,7 @@ fn on_connect(socket: SocketRef, Data(data): Data<Value>) {
         socket.id,
         data
     ));
-    if token_valid(data, "test") {
+    if token_valid(&data, "test") {
         socket.on(
             "study_msg",
             move |s: SocketRef, data: Data<Value>| async move {
@@ -309,11 +325,44 @@ pub fn config_router() -> Router {
 
 fn wechat_router() -> Router {
     Router::new()
+        .push(Router::with_path("/wechat/mp/").get(wechat_mp))
         .push(Router::with_path("/wechat/mp/login.do").get(wechat_mp_login))
         .push(Router::with_path("/wechat/mp/home.do").get(wechat_mp_home))
 }
 
-//引导用户登录(开发的帐号没有登录权限，暂时先放弃这块)
+fn check_signature(signature: &str, timestamp: &str, nonce: &str) -> bool {
+    let mut values = BTreeSet::new();
+    values.insert(config.mp.clone().unwrap().token);
+    values.insert(timestamp.to_owned());
+    values.insert(nonce.to_owned());
+
+    let concatenated = values.into_iter().collect::<String>();
+    let hash = Sha1::digest(concatenated.as_bytes());
+
+    format!("{:x}", hash) == signature
+}
+
+// https://mp.weixin.qq.com/debug/cgi-bin/sandboxinfo?action=showinfo&t=sandbox/index
+
+// 验证页
+#[handler]
+async fn wechat_mp(req: &mut Request, res: &mut Response) {
+    if let (Some(signature), Some(timestamp), Some(nonce), Some(echostr)) = (
+        req.query::<String>("signature"),
+        req.query::<String>("timestamp"),
+        req.query::<String>("nonce"),
+        req.query::<String>("echostr"),
+    ) {
+        if check_signature(&signature, &timestamp, &nonce) {
+            res.status_code(StatusCode::OK);
+            res.render(echostr);
+            return;
+        }
+    }
+    res.status_code(StatusCode::UNAUTHORIZED);
+    res.render("Invalid signature");
+}
+//引导用户登录
 #[handler]
 async fn wechat_mp_login(req: &mut Request, res: &mut Response) {
     let state = req.query::<String>("state").or(Some(format!(""))).unwrap();
@@ -321,7 +370,7 @@ async fn wechat_mp_login(req: &mut Request, res: &mut Response) {
         res.status_code(StatusCode::NOT_FOUND);
         return;
     }
-    let mut redirect_uri = format!("/wechat/mp/home");
+    let mut redirect_uri = format!("");
     let wechat_token = wechat::WechatMPToken::load().unwrap();
     let url = wechat_token
         .get_redirect_login_url(redirect_uri, state)
@@ -333,10 +382,11 @@ async fn wechat_mp_login(req: &mut Request, res: &mut Response) {
 //获得授权后跳到这里
 #[handler]
 async fn wechat_mp_home(req: &mut Request, res: &mut Response) {
-    let code = req.query::<String>("code").or(Some(format!(""))).unwrap();
-    let state = req.query::<String>("state").or(Some(format!(""))).unwrap();
-    let guid = req.query::<String>("guid").or(Some(format!(""))).unwrap();
-    if !code.is_empty() && !state.is_empty() && !guid.is_empty() {
+    if let (Some(code), Some(state), Some(guid)) = (
+        req.query::<String>("code"),
+        req.query::<String>("state"),
+        req.query::<String>("guid"),
+    ) {
         let wechat_token = wechat::WechatMPToken::load().unwrap();
         let (user, host) = wechat_token.user_login(code).await.unwrap();
         //绑定
@@ -349,14 +399,6 @@ async fn wechat_mp_home(req: &mut Request, res: &mut Response) {
             "{}/wechat/mp/home?t={}&token={}",
             host, state, user_token
         )));
-        return;
-    }
-    let t = req.query::<String>("t").or(Some(format!(""))).unwrap();
-    let token = req.query::<String>("token").or(Some(format!(""))).unwrap();
-    if !t.is_empty() && !token.is_empty() {
-        //判断用户token登录状态
-
-        res.render(Redirect::found("/"));
         return;
     }
     res.status_code(StatusCode::NOT_FOUND);
